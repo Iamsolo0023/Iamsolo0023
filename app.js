@@ -1,35 +1,138 @@
 (()=>{
-const canvas=document.getElementById('neural-bg');
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let W=0,H=0,dpr=1,t=0,scrollY=0;
-const mouse={x:innerWidth*.7,y:innerHeight*.45},target={x:mouse.x,y:mouse.y};
-let pts=[];
-if(canvas){
- const ctx=canvas.getContext('2d');
- function resize(){W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);const n=W<700?75:W<1100?125:190;pts=Array.from({length:n},(_,i)=>{const a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.55)*Math.min(W,H)*.48;return{x:W*.7+Math.cos(a)*r,y:H*.46+Math.sin(a)*r*.72,z:.08+Math.random()*.95,p:i,s:.35+Math.random()*1.1}})}
- function project(p){const cx=W*.7+(mouse.x-W*.5)*.045,cy=H*.46+(mouse.y-H*.5)*.03-scrollY*.012,d=1.08+p.z*.72;return{x:cx+(p.x-W*.7)/d,y:cy+(p.y-H*.46)/d}}
- function frame(){t+=.005;ctx.clearRect(0,0,W,H);const cx=W*.7+(mouse.x-W*.5)*.045,cy=H*.46+(mouse.y-H*.5)*.03-scrollY*.012,R=Math.min(W,H)*.30;
-  for(const p of pts){if(!reduce){p.x+=Math.cos(t*1.2+p.p)*.10*p.s;p.y+=Math.sin(t+p.p)*.065*p.s}const q=project(p);p.px=q.x;p.py=q.y}
-  for(let i=0;i<pts.length;i++){const a=pts[i];for(let j=i+1;j<pts.length;j++){const b=pts[j],d=Math.hypot(a.px-b.px,a.py-b.py);if(d<105){ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.strokeStyle=`rgba(155,124,255,${.20*(1-d/105)})`;ctx.lineWidth=.55;ctx.stroke()}}}
-  for(const p of pts){const q=project(p),s=(.65+p.z*1.9)*(W<700?.72:1);ctx.beginPath();ctx.arc(q.x,q.y,s,0,Math.PI*2);ctx.fillStyle=`rgba(196,175,255,${.25+p.z*.55})`;ctx.shadowBlur=7+p.z*9;ctx.shadowColor='rgba(155,124,255,.72)';ctx.fill();ctx.shadowBlur=0}
-  ctx.save();ctx.translate(cx,cy);ctx.rotate((mouse.x-W/2)*.0008);for(let b=0;b<16;b++){const lat=-Math.PI/2+(b+.5)*Math.PI/16,ry=Math.cos(lat),yy=Math.sin(lat)*R;ctx.beginPath();for(let k=0;k<=90;k++){const a=k/90*Math.PI*2+t*.16,x=Math.cos(a)*R*ry,y=yy*.72;k?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=`rgba(155,124,255,${.08+ry*.13})`;ctx.stroke()}for(let c=0;c<22;c++){const a=c/22*Math.PI+t*.11;ctx.beginPath();for(let k=0;k<=90;k++){const lat=-Math.PI/2+k/90*Math.PI,x=Math.cos(a)*Math.cos(lat)*R,y=Math.sin(lat)*R*.72;k?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle='rgba(85,230,224,.14)';ctx.stroke()}for(let k=0;k<5;k++){ctx.beginPath();ctx.ellipse(0,0,R*(1+k*.075),R*(.15+k*.03),t*.4+k*.7,0,Math.PI*2);ctx.strokeStyle='rgba(85,230,224,.11)';ctx.stroke()}ctx.restore();
-  for(let k=0;k<4;k++){ctx.save();ctx.translate(cx,cy);ctx.rotate(t*(.28-k*.055)+k);ctx.beginPath();ctx.ellipse(0,0,R*(1.18+k*.13),R*(.24+k*.045),0,0,Math.PI*2);ctx.strokeStyle=k===1?'rgba(85,230,224,.30)':'rgba(155,124,255,.23)';ctx.lineWidth=k===1?1.1:.7;ctx.stroke();ctx.restore()}
-  if(!reduce)requestAnimationFrame(frame)}
- resize();frame();addEventListener('resize',resize,{passive:true});addEventListener('pointermove',e=>{target.x=e.clientX;target.y=e.clientY},{passive:true});addEventListener('scroll',()=>scrollY=window.scrollY,{passive:true});
- if(!reduce){(function smooth(){mouse.x+=(target.x-mouse.x)*.055;mouse.y+=(target.y-mouse.y)*.055;requestAnimationFrame(smooth)})()}
-}
-const backTop=document.getElementById('backTop');if(backTop){backTop.classList.add('visible');backTop.innerHTML='<span class="top-arrow">↑</span><span class="top-label">TOP</span>';backTop.setAttribute('aria-label','Back to top');backTop.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}))}
-const cursor=document.querySelector('.cursor');addEventListener('mousemove',e=>{if(cursor){cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'}});
-document.querySelectorAll('a,button,.projects article').forEach(el=>{el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'))});
-document.querySelectorAll('.filters button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const f=btn.dataset.filter;document.querySelectorAll('.projects article').forEach(card=>{const show=f==='all'||card.dataset.tags.includes(f);card.style.display=show?'flex':'none';if(show)card.animate([{opacity:.15,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)'})})}));
-const hamb=document.querySelector('.hamb');if(hamb)hamb.addEventListener('click',()=>{const links=document.querySelector('.links');const open=links.classList.toggle('open');links.style.display=open?'flex':'';links.style.position=open?'absolute':'';links.style.top=open?'76px':'';links.style.left=open?'0':'';links.style.right=open?'0':'';links.style.padding=open?'25px 6vw':'';links.style.background=open?'rgba(7,7,10,.97)':'';links.style.flexDirection=open?'column':'';links.style.borderBottom=open?'1px solid #25242c':''});
-const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('seen')}),{threshold:.10});document.querySelectorAll('.projects article,.timeline article,.skill').forEach(x=>{x.style.opacity='0';x.style.transform='translateY(22px)';x.style.transition='opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)';obs.observe(x)});
-if(!matchMedia('(pointer:coarse)').matches){document.querySelectorAll('.projects article,.console').forEach(card=>{card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.setProperty('--rx',`${-y*4}deg`);card.style.setProperty('--ry',`${x*5}deg`);card.classList.add('tilting')});card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');card.classList.remove('tilting')})})}
-const consoleBox=document.querySelector('.console');if(consoleBox&&!reduce){const logs=consoleBox.querySelectorAll('.logs p');let k=0;setInterval(()=>{logs.forEach((l,i)=>l.style.opacity=i===k%logs.length?'1':'.48');k++},1800)}
-const stack=document.querySelector('#stack');if(stack&&!stack.querySelector('.data-flow')){const flow=document.createElement('div');flow.className='data-flow';flow.innerHTML='<div class="flow-title"><span>PIPELINE / 00</span><b>FROM RAW DATA TO DECISION</b></div><div class="flow-track"><span>RAW DATA</span><i>→</i><span>PYTHON / ETL</span><i>→</i><span>SQL MODEL</span><i>→</i><span>DAX</span><i>→</i><span>POWER BI</span><i>→</i><strong>DECISION</strong></div>';stack.querySelector('.stack-layout')?.before(flow)}
-const palette=document.createElement('div');palette.className='command-palette';palette.innerHTML='<div class="palette-box"><div class="palette-head"><span>SHASWAT.OS</span><kbd>ESC</kbd></div><input aria-label="Command" placeholder="Type a command…" autocomplete="off"><div class="palette-items"><button data-go="work">▣ <span>Explore projects</span><kbd>↵</kbd></button><button data-go="stack">⌁ <span>Open data stack</span><kbd>↵</kbd></button><button data-go="experience">◫ <span>View experience</span><kbd>↵</kbd></button><button data-go="contact">✦ <span>Get in touch</span><kbd>↵</kbd></button><button data-go="github">⌘ <span>Open GitHub</span><kbd>↵</kbd></button></div><small>COMMAND PALETTE · NAVIGATE YOUR WAY</small></div>';
-document.body.appendChild(palette);const pInput=palette.querySelector('input');const closePalette=()=>{palette.classList.remove('open');pInput.value=''};const openPalette=()=>{palette.classList.add('open');setTimeout(()=>pInput.focus(),30)};addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette()}if(e.key==='Escape')closePalette()});palette.addEventListener('click',e=>{if(e.target===palette)closePalette();const b=e.target.closest('button[data-go]');if(!b)return;const go=b.dataset.go;if(go==='github')open('https://github.com/Iamsolo0023','_blank');else{document.getElementById(go)?.scrollIntoView({behavior:'smooth'});closePalette()}});pInput.addEventListener('input',()=>{const q=pInput.value.toLowerCase();palette.querySelectorAll('.palette-items button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'flex':'none')});
-// Critical visibility fallback: reveal content even if IntersectionObserver is delayed or unsupported.
-const revealStyle=document.createElement('style');revealStyle.textContent='.seen{opacity:1!important;transform:none!important}';document.head.appendChild(revealStyle);
-document.querySelectorAll('.projects article,.timeline article,.skill').forEach(x=>{if(x.getBoundingClientRect().top<innerHeight*1.15)x.classList.add('seen')});
+'use strict';
+
+/* =========================
+   PARTICLE / DATA UNIVERSE
+========================= */
+try{
+ const canvas=document.getElementById('neural-bg');
+ if(canvas){
+  const ctx=canvas.getContext('2d');
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W=innerWidth,H=innerHeight,dpr=1,t=0,scrollY=0,pts=[];
+  const mouse={x:innerWidth*.7,y:innerHeight*.45},target={x:mouse.x,y:mouse.y};
+  function resize(){
+   W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,2);
+   canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+   ctx.setTransform(dpr,0,0,dpr,0,0);
+   const n=W<700?75:W<1100?125:190;
+   pts=Array.from({length:n},(_,i)=>{const a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.55)*Math.min(W,H)*.48;return{x:W*.7+Math.cos(a)*r,y:H*.46+Math.sin(a)*r*.72,z:.08+Math.random()*.95,p:i,s:.35+Math.random()*1.1}});
+  }
+  function project(p){const cx=W*.7+(mouse.x-W*.5)*.045,cy=H*.46+(mouse.y-H*.5)*.03-scrollY*.012,d=1.08+p.z*.72;return{x:cx+(p.x-W*.7)/d,y:cy+(p.y-H*.46)/d}}
+  function frame(){
+   t+=.005;ctx.clearRect(0,0,W,H);
+   const cx=W*.7+(mouse.x-W*.5)*.045,cy=H*.46+(mouse.y-H*.5)*.03-scrollY*.012,R=Math.min(W,H)*.30;
+   for(const p of pts){if(!reduce){p.x+=Math.cos(t*1.2+p.p)*.10*p.s;p.y+=Math.sin(t+p.p)*.065*p.s}const q=project(p);p.px=q.x;p.py=q.y}
+   for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const a=pts[i],b=pts[j],d=Math.hypot(a.px-b.px,a.py-b.py);if(d<105){ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.strokeStyle=`rgba(155,124,255,${.20*(1-d/105)})`;ctx.lineWidth=.55;ctx.stroke()}}
+   for(const p of pts){const q=project(p),s=(.65+p.z*1.9)*(W<700?.72:1);ctx.beginPath();ctx.arc(q.x,q.y,s,0,Math.PI*2);ctx.fillStyle=`rgba(196,175,255,${.25+p.z*.55})`;ctx.shadowBlur=7+p.z*9;ctx.shadowColor='rgba(155,124,255,.72)';ctx.fill();ctx.shadowBlur=0}
+   ctx.save();ctx.translate(cx,cy);ctx.rotate((mouse.x-W/2)*.0008);
+   for(let b=0;b<16;b++){const lat=-Math.PI/2+(b+.5)*Math.PI/16,ry=Math.cos(lat),yy=Math.sin(lat)*R;ctx.beginPath();for(let k=0;k<=90;k++){const a=k/90*Math.PI*2+t*.16,x=Math.cos(a)*R*ry,y=yy*.72;k?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=`rgba(155,124,255,${.08+ry*.13})`;ctx.stroke()}
+   for(let c=0;c<22;c++){const a=c/22*Math.PI+t*.11;ctx.beginPath();for(let k=0;k<=90;k++){const lat=-Math.PI/2+k/90*Math.PI,x=Math.cos(a)*Math.cos(lat)*R,y=Math.sin(lat)*R*.72;k?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle='rgba(85,230,224,.14)';ctx.stroke()}
+   for(let k=0;k<5;k++){ctx.beginPath();ctx.ellipse(0,0,R*(1+k*.075),R*(.15+k*.03),t*.4+k*.7,0,Math.PI*2);ctx.strokeStyle='rgba(85,230,224,.11)';ctx.stroke()}
+   ctx.restore();
+   for(let k=0;k<4;k++){ctx.save();ctx.translate(cx,cy);ctx.rotate(t*(.28-k*.055)+k);ctx.beginPath();ctx.ellipse(0,0,R*(1.18+k*.13),R*(.24+k*.045),0,0,Math.PI*2);ctx.strokeStyle=k===1?'rgba(85,230,224,.30)':'rgba(155,124,255,.23)';ctx.lineWidth=k===1?1.1:.7;ctx.stroke();ctx.restore()}
+   if(!reduce)requestAnimationFrame(frame);
+  }
+  resize();frame();
+  addEventListener('resize',resize,{passive:true});
+  addEventListener('pointermove',e=>{target.x=e.clientX;target.y=e.clientY;},{passive:true});
+  addEventListener('scroll',()=>{scrollY=window.scrollY},{passive:true});
+  if(!reduce)(function smooth(){mouse.x+=(target.x-mouse.x)*.055;mouse.y+=(target.y-mouse.y)*.055;requestAnimationFrame(smooth)})();
+ }
+}catch(e){console.warn('Background visual disabled:',e)}
+
+/* IMPORTANT: content is intentionally NEVER hidden by JavaScript. */
+try{
+ document.querySelectorAll('.projects article,.timeline article,.skill').forEach(el=>{
+  el.style.opacity='1';
+  el.style.transform='none';
+  el.style.visibility='visible';
+ });
+}catch(e){}
+
+/* =========================
+   BACK TO TOP
+========================= */
+try{
+ const backTop=document.getElementById('backTop');
+ if(backTop){
+  backTop.classList.add('visible');
+  backTop.innerHTML='<span class="top-arrow">↑</span><span class="top-label">TOP</span>';
+  backTop.setAttribute('aria-label','Back to top');
+  backTop.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+ }
+}catch(e){}
+
+/* =========================
+   CURSOR
+========================= */
+try{
+ const cursor=document.querySelector('.cursor');
+ addEventListener('mousemove',e=>{if(cursor){cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'}},{passive:true});
+ document.querySelectorAll('a,button,.projects article').forEach(el=>{el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'))});
+}catch(e){}
+
+/* =========================
+   PROJECT FILTERS
+========================= */
+try{
+ document.querySelectorAll('.filters button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const f=btn.dataset.filter;
+  document.querySelectorAll('.projects article').forEach(card=>{const show=f==='all'||(card.dataset.tags||'').includes(f);card.style.display=show?'flex':'none';});
+ }));
+}catch(e){}
+
+/* =========================
+   MOBILE NAV
+========================= */
+try{
+ const hamb=document.querySelector('.hamb'),links=document.querySelector('.links');
+ if(hamb&&links){hamb.addEventListener('click',()=>{
+  const open=links.classList.toggle('open');
+  links.style.display=open?'flex':'';links.style.position=open?'absolute':'';links.style.top=open?'76px':'';links.style.left=open?'0':'';links.style.right=open?'0':'';links.style.padding=open?'25px 6vw':'';links.style.background=open?'rgba(7,7,10,.97)':'';links.style.flexDirection=open?'column':'';links.style.borderBottom=open?'1px solid #25242c':'';
+ });
+ links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{links.classList.remove('open');if(innerWidth<=850)links.style.display='none'}));
+ }
+}catch(e){}
+
+/* =========================
+   DESKTOP 3D TILT
+========================= */
+try{
+ if(!matchMedia('(pointer:coarse)').matches){document.querySelectorAll('.projects article,.console').forEach(card=>{
+  card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.setProperty('--rx',`${-y*4}deg`);card.style.setProperty('--ry',`${x*5}deg`)});
+  card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg')});
+ })}
+}catch(e){}
+
+/* =========================
+   LIVE CONSOLE
+========================= */
+try{
+ const consoleBox=document.querySelector('.console');
+ if(consoleBox&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const logs=consoleBox.querySelectorAll('.logs p');let k=0;if(logs.length)setInterval(()=>{logs.forEach((l,i)=>l.style.opacity=i===k%logs.length?'1':'.48');k++},1800)}
+}catch(e){}
+
+/* =========================
+   DATA PIPELINE
+========================= */
+try{
+ const stack=document.querySelector('#stack');
+ if(stack&&!stack.querySelector('.data-flow')){const flow=document.createElement('div');flow.className='data-flow';flow.innerHTML='<div class="flow-title"><span>PIPELINE / 00</span><b>FROM RAW DATA TO DECISION</b></div><div class="flow-track"><span>RAW DATA</span><i>→</i><span>PYTHON / ETL</span><i>→</i><span>SQL MODEL</span><i>→</i><span>DAX</span><i>→</i><span>POWER BI</span><i>→</i><strong>DECISION</strong></div>';stack.querySelector('.stack-layout')?.before(flow)}
+}catch(e){}
+
+/* =========================
+   COMMAND PALETTE
+========================= */
+try{
+ const palette=document.createElement('div');palette.className='command-palette';palette.innerHTML='<div class="palette-box"><div class="palette-head"><span>SHASWAT.OS</span><kbd>ESC</kbd></div><input aria-label="Command" placeholder="Type a command…" autocomplete="off"><div class="palette-items"><button data-go="work">▣ <span>Explore projects</span><kbd>↵</kbd></button><button data-go="stack">⌁ <span>Open data stack</span><kbd>↵</kbd></button><button data-go="experience">◫ <span>View experience</span><kbd>↵</kbd></button><button data-go="contact">✦ <span>Get in touch</span><kbd>↵</kbd></button><button data-go="github">⌘ <span>Open GitHub</span><kbd>↵</kbd></button></div><small>COMMAND PALETTE · NAVIGATE YOUR WAY</small></div>';
+ document.body.appendChild(palette);
+ const input=palette.querySelector('input');
+ const close=()=>{palette.classList.remove('open');if(input)input.value=''};
+ const openPalette=()=>{palette.classList.add('open');setTimeout(()=>input?.focus(),20)};
+ addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette()}if(e.key==='Escape')close()});
+ palette.addEventListener('click',e=>{if(e.target===palette)return close();const b=e.target.closest('button[data-go]');if(!b)return;const go=b.dataset.go;if(go==='github')window.open('https://github.com/Iamsolo0023','_blank','noopener');else{document.getElementById(go)?.scrollIntoView({behavior:'smooth'});close()}});
+ input?.addEventListener('input',()=>{const q=input.value.toLowerCase();palette.querySelectorAll('.palette-items button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'flex':'none')});
+}catch(e){}
 })();
